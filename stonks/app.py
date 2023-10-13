@@ -1,6 +1,18 @@
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, session, url_for
 from markupsafe import escape
 from pydantic import BaseModel, validator, ValidationError
+
+
+# cria instância de uma app Flask, o nome da app equivale ao __name__
+app = Flask(__name__)
+
+# Key usada para assinar o cookie gerado pelo servidor.
+# Quando o cliente envia o cookie, o servidor usa a key para
+# verificar se o cookie foi modificado pelo cliente (tamper)
+# gerado com:
+# import secrets
+# secrets.token_bytes(32).hex()
+app.secret_key = '0d423c8b411e86a9b29ad8bd9907c3b11320e7222f3abb0f94dce8234f89edeb'
 
 
 # quando um StockModel é criado passando os seus elementos, ocorre a tentativa
@@ -18,8 +30,6 @@ class StockModel(BaseModel):
             raise ValueError('Stock symbol must be 1-5 characters')
         return value.upper()
 
-# cria instância de uma app Flask, o nome da app equivale ao __name__
-app = Flask(__name__)
 
 @app.route('/')
 def index():
@@ -32,16 +42,6 @@ def index():
 def about():
     # permite passar dados que serão processados durante a renderização
     return render_template('about.html', developer='Vitor')
-
-
-# /stocks != /stocks/
-# Convencionalmente uma barra no fim indica que o 
-# recurso agrupa outros
-# ex.: /stocks/ -> retorna lista de stocks
-#      /sotcks/1 -> retorna a stock com id 1 etc
-@app.route('/stocks/')
-def stocks():
-    return '<h2>Stock list...</h2>'
 
 
 # permite receber o valor passado na url como uma variável que é recebida na
@@ -57,6 +57,18 @@ def hello_message(message):
 @app.route('/blog_posts/<int:post_id>')
 def display_blog_post(post_id):
     return f'<h1>Blog post #{post_id}...</h1>'
+
+
+# /stocks != /stocks/
+# Convencionalmente uma barra no fim indica que o 
+# recurso agrupa outros
+# ex.: /stocks/ -> retorna lista de stocks
+#      /sotcks/1 -> retorna a stock com id 1 etc
+@app.route('/stocks/')
+def list_stocks():
+    # dados da sessão do flask ficam disponíveis em templates
+    # browsers diferentes tem sessões diferentes
+    return render_template('stocks.html')
 
 
 #                        permite lidar com diferentes métodos na mesma rota
@@ -75,6 +87,18 @@ def add_stock():
                 purchase_price=request.form['purchase_price']
             )
             print(stock_data)
+
+            # armazena dados na sessão
+            # sessões permitem armazenar dados de forma persisitente sobre
+            # multiplos requests. Idealizado para infos (não sensíveis)
+            # de usuários (como tokens gerados ao fazer o login)
+            # armazenados em cookies criptograficamente assinados
+            # não criptografados!
+            session['stock_symbol'] = stock_data.stock_symbol
+            session['number_of_shares'] = stock_data.number_of_shares
+            session['purchase_price'] = stock_data.purchase_price
+
+            return redirect(url_for('list_stocks'))
         except ValidationError as e:
             print(e)
 
