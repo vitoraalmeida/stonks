@@ -1,26 +1,34 @@
 {% extends "base.html" %}
 
+{% block styling %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/stocks_style.css') }}">
+{% endblock %}
+
 {% block content %}
-<div>
-  <h1>Lista de ações</h1>
+<div class="stocks-container">
+    <div class="stocks-list">
+        <div>
+          <h1>Lista de ações</h1>
 
-  <table>
-    <!-- Table Header Row -->
-    <thead>
-      <tr>
-        <th>Ticket</th>
-        <th>Número de ações</th>
-        <th>Preço de compra</th>
-      </tr>
-    </thead>
+          <table>
+            <!-- Table Header Row -->
+            <thead>
+              <tr>
+                <th>Ticket</th>
+                <th>Número de ações</th>
+                <th>Preço de compra</th>
+              </tr>
+            </thead>
 
-    <!-- Table Element (Row) -->
-    <tbody>
-      <!-- Dados da sessão do flask -->
-      <td>{{ session['stock_symbol'] }}</td>
-      <td>{{ session['number_of_shares'] }}</td>
-      <td>${{ session['purchase_price'] }}</td>
-    </tbody>
-  </table>
+            <!-- Table Element (Row) -->
+            <tbody>
+              <!-- Dados da sessão do flask -->
+              <td>{{ session['stock_symbol'] }}</td>
+              <td>{{ session['number_of_shares'] }}</td>
+              <td>${{ session['purchase_price'] }}</td>
+            </tbody>
+          </table>
+</div>
+    </div>
 </div>
 {% endblock %}

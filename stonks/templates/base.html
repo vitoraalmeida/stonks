@@ -4,19 +4,35 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Stonks - Monitore e gerencie seus investimentos</title>
+    <title>Stonks - Portifólio de investimentos</title>
+     <!-- Estilos globais servidos localmente no servidor-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_style.css') }}">
+     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/x-icon">
+    <!-- Estilos adicionais, para templates filhos -->
+    {% block styling %}
+    {% endblock %}
   </head>
 
   <body>
-    <header>
-      <h1>Stonks - Monitore e gerencie seus investimentos</h1>
+    <header class="site-header">
+      <nav class="nav">
+        <a class="nav-link logo" href="{{ url_for('index') }}">Stonks - Portifólio de investimentos</a>
+        <ul class="nav-list">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('list_stocks') }}">Lista de ações</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('add_stock') }}">Adicionar ação</a></li>
+        </ul>
+      </nav>
     </header>
 
-    <main>
+    <main class="content">
       <!-- child template -->
       {% block content %}
       {% endblock %}
     </main>
   </body>
+  <footer class="site-footer">
+    <small>vitoralmeida.net 2023</small>
+  </footer>
+
 </html>
 

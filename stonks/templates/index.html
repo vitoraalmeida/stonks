@@ -1,5 +1,20 @@
 {% extends "base.html" %}
 
+<!-- estilos específicos a páginas -->
+{% block styling %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index_style.css') }}">
+{% endblock %}
+
 {% block content %}
-<h1>Bem vindo ao Stonks!</h1>
+<div class="container">
+    <header class="content-text">
+        <h1>Bem vindo ao <strong>Stonks!</strong></h1>
+        <p>Monitore e gerencie seu portifólio de investimentos</p>
+    </header>
+    <figure class="content-image">
+        <img
+            src="{{ url_for('static', filename='img/stonks.jpeg') }}"
+            alt="Laptop computer on a desk">
+    </figure>
+</div>
 {% endblock %}

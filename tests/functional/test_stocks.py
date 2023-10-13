@@ -15,8 +15,9 @@ def test_index_page():
     with app.test_client() as client:
         response = client.get('/')
         assert response.status_code == 200
-        assert b'Stonks - Monitore e gerencie seus investimentos' in response.data
+        assert 'Stonks - Portifólio de investimentos' in response.data.decode()
         assert b'Bem vindo ao Stonks!' in response.data
+        assert 'Monitore e gerencie seu portifólio de investimentos' in response.data.decode()
 
 
 def test_about_page():
@@ -28,7 +29,7 @@ def test_about_page():
     with app.test_client() as client:
         response = client.get('/about')
         assert response.status_code == 200
-        assert b'Stonks - Monitore e gerencie seus investimentos' in response.data
+        assert 'Stonks - Portifólio de investimentos' in response.data.decode()
         assert b'Sobre' in response.data
         assert 'Essa aplicação foi feita utilizando o framework web Flask' in response.data.decode()
         assert b'Desenvolvido por Vitor' in response.data
@@ -43,7 +44,7 @@ def test_get_add_stock_page():
     with app.test_client() as client:
         response = client.get('/add_stock')
         assert response.status_code == 200
-        assert b'Stonks - Monitore e gerencie seus investimentos' in response.data
+        assert 'Stonks - Portifólio de investimentos' in response.data.decode()
         assert 'Adicione uma ação' in response.data.decode()
         assert 'Ticket: <em>(obrigatório, de 1-5 letras maiúsculas</em>' in response.data.decode()
         assert 'Número de ações: <em>(obrigatório)</em>' in response.data.decode()
