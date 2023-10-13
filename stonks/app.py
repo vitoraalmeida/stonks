@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, redirect, render_template, request, session, url_for, flash
 from markupsafe import escape
 from pydantic import BaseModel, validator, ValidationError
 
@@ -40,6 +40,7 @@ def index():
 
 @app.route('/about')
 def about():
+    flash('Thanks for learning about this site!', 'info')
     # permite passar dados que serão processados durante a renderização
     return render_template('about.html', developer='Vitor')
 
@@ -97,6 +98,8 @@ def add_stock():
             session['stock_symbol'] = stock_data.stock_symbol
             session['number_of_shares'] = stock_data.number_of_shares
             session['purchase_price'] = stock_data.purchase_price
+            # adiciona flash messagem que será mostrada na próxima requisição
+            flash(f'Nova ação adicionada ({stock_data.stock_symbol})', 'success')
 
             return redirect(url_for('list_stocks'))
         except ValidationError as e:
