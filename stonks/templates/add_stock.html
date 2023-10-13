@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Adicione uma ação</h1>
+<form method="post">
+  <label for="stockSymbol">Ticket: <em>(obrigatório, de 1-5 letras maiúsculas</em> </label>
+  <input type="text" id="stockSymbol" name="stock_symbol" required pattern="[A-Z]{1,5}" />
+  <br>
+  <label for="numberOfShares">Número de ações: <em>(obrigatório)</em></label>
+  <input type="text" id="numberOfShares" name="number_of_shares" required />
+  <br>
+  <label for="purchasePrice">Preço de compra (R$):</label>
+  <input type="text" id="purchasePrice" name="purchase_price" placeholder="R$300.00" required />
+  <br>
+  <input type="submit">
+</form>
+{% endblock %}
