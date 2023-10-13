@@ -1,10 +1,42 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, redirect, render_template, request, session, url_for, flash
+from flask.logging import default_handler # para remover o default
 from markupsafe import escape
 from pydantic import BaseModel, validator, ValidationError
 
 
 # cria instância de uma app Flask, o nome da app equivale ao __name__
 app = Flask(__name__)
+# remove o logger default. Assim a aplicação não mostra logs no terminal
+#app.logger.removeHandler(default_handler)
+
+# sem rotação de logs
+# log_file_handler = logging.FileHandler('flask-stonks.log')
+
+# quando o arquivo chega no tamanho determinado, move o arquivo para
+# arquivo.1 e outro arquivo com o mesmo nome original é criado
+# de forma que o arquivo com o nome original é sempre o mais recente
+log_file_handler = RotatingFileHandler(
+    'flask-stonks.log',
+    maxBytes=16384, # tamanho máxima
+    backupCount=20  # máximo de cópias
+)
+log_file_formatter = logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(filename)s:%(lineno)d]'
+)
+log_file_handler.setFormatter(log_file_formatter)
+# Nível mínimo de log a ser mostrado
+# É indicado que quanto mais cedo no ciclo de desenvolvimento
+# mais informações sejam logadas, mas na medida em que avançamos na maturidade
+# da aplicação, reduzimos a quantidade e criticidade dos logs
+# DEBUG -> INFO -> WARNING -> ERROR -> CRITICAL
+# também podemos definir o nível de log com base no ambiente
+# log_level = logging.DEBUG if DEBUG else logging.INFO
+log_file_handler.setLevel(logging.INFO)
+app.logger.addHandler(log_file_handler)
+
+app.logger.info('Starting the Stonks App')
 
 # Key usada para assinar o cookie gerado pelo servidor.
 # Quando o cliente envia o cookie, o servidor usa a key para
@@ -100,6 +132,7 @@ def add_stock():
             session['purchase_price'] = stock_data.purchase_price
             # adiciona flash messagem que será mostrada na próxima requisição
             flash(f'Nova ação adicionada ({stock_data.stock_symbol})', 'success')
+            app.logger.info(f"Added new stock ({request.form['stock_symbol']})!")
 
             return redirect(url_for('list_stocks'))
         except ValidationError as e:
