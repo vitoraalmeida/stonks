@@ -1,2 +1,7 @@
 __pycache__/
 flask-stonks.log
+instance/*.cfg
+instance/*.db
+instance/*.log
+instance/*.log*
+
