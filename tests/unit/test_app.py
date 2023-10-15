@@ -2,9 +2,9 @@ from pydantic import ValidationError
 import pytest
 
 """
-Este arquivo (test_app.py) contém os testes unitários para o arquivo stonks/app.py
+Este arquivo (test_app.py) contém os testes unitários para a aplicação
 """
-from stonks.app import StockModel
+from project.stocks.routes import StockModel
 
 def test_validate_stock_data_nominal():
     """
