@@ -1,6 +1,7 @@
 import os
 import pytest
-from project import create_app
+from project import create_app, database
+from project.models import Stock
 from flask import current_app
 
 
@@ -26,6 +27,7 @@ def test_client():
     # current_app é um proxy para o objeto global Application Context,
     # que armazena dados da aplicação (configs etc)
     current_app.logger.info('In the test_client() fixture...')
+    database.create_all()
 
     # apos usar o contexto, removemos para limpeza da fixture
     ctx.pop()
@@ -33,3 +35,14 @@ def test_client():
     # retorna o controle para a função que chamou a fixture, injetando os objetos
     # que foram criados na fixture
     yield testing_client
+
+    # após o teste ser concluido, limpa o banco de testes
+    ctx = flask_app.app_context()
+    ctx.push()
+    database.drop_all()
+
+
+@pytest.fixture(scope='module')
+def new_stock():
+    stock = Stock('AAPL', '16', '406.78')
+    return stock
