@@ -13,6 +13,7 @@ def create_app():
     app.config.from_object(config_type)
     register_blueprints(app)
     register_global_routes(app)
+    register_error_pages(app)
     configure_logging(app)
 
     return app
@@ -90,3 +91,11 @@ def register_global_routes(app):
         return f'<h1>Blog post #{post_id}...</h1>'
 
 
+def register_error_pages(app):
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        return render_template('405.html'), 405
