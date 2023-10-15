@@ -1,3 +1,4 @@
+import click
 from . import stocks_blueprint
 
 from flask import current_app, render_template, request, session, flash, redirect, url_for
@@ -86,4 +87,31 @@ def add_stock():
             print(e)
 
     return render_template('stocks/add_stock.html')
+
+
+# ------------
+# CLI Commands
+# ------------
+
+@stocks_blueprint.cli.command('create_default_set')
+def create_default_set():
+    """ Cria três novas ações e adiciona no banco de dados"""
+    stock1 = Stock('HD', '25', '247.29')
+    stock2 = Stock('TWTR', '230', '31.89')
+    stock3 = Stock('DIS', '65', '118.77')
+    database.session.add(stock1)
+    database.session.add(stock2)
+    database.session.add(stock3)
+    database.session.commit()
+
+
+@stocks_blueprint.cli.command('create')
+@click.argument('symbol')
+@click.argument('number_of_shares')
+@click.argument('purchase_price')
+def create(symbol, number_of_shares, purchase_price):
+    """Cria uma nova ação passada pela CLI e adiciona no banco de dados"""
+    stock = Stock(symbol, number_of_shares, purchase_price)
+    database.session.add(stock)
+    database.session.commit()
 

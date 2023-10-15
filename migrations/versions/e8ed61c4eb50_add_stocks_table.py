@@ -1,8 +1,8 @@
-"""add stocks table
+"""Add stocks table
 
-Revision ID: ae8e81baa0dc
+Revision ID: e8ed61c4eb50
 Revises: 
-Create Date: 2023-10-14 22:37:35.116880
+Create Date: 2023-10-14 23:04:43.380259
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ae8e81baa0dc'
+revision = 'e8ed61c4eb50'
 down_revision = None
 branch_labels = None
 depends_on = None
