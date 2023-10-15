@@ -1,4 +1,5 @@
 from flask import Flask, flash, render_template
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from logging.handlers import RotatingFileHandler
@@ -24,6 +25,7 @@ metadata = MetaData(naming_convention=convention)
 
 # cria instância da extensão no contexto global, mas ainda não foi adicionado na aplicação
 database = SQLAlchemy(metadata=metadata)
+db_migration = Migrate()
 
 
 ########################
@@ -56,8 +58,9 @@ def register_blueprints(app):
 
 
 def initialize_extensions(app):
-    # faz o bind da extensão do sqlalchemy à aplicação
+    # faz o bind da extensão à aplicação
     database.init_app(app)
+    db_migration.init_app(app, database)
 
 
 def configure_logging(app):
