@@ -2,6 +2,8 @@ from . import stocks_blueprint
 
 from flask import current_app, render_template, request, session, flash, redirect, url_for
 from pydantic import BaseModel, validator, ValidationError
+from project import database
+from project.models import Stock
 
 
 # quando um StockModel é criado passando os seus elementos, ocorre a tentativa
@@ -27,9 +29,16 @@ class StockModel(BaseModel):
 #      /sotcks/1 -> retorna a stock com id 1 etc
 @stocks_blueprint.route('/stocks/')
 def list_stocks():
+    query = database.select(Stock).order_by(Stock.id)
+    # execute() retorna um iterável (Result)
+    # scalars().all() consome o iterável e retorna a lista de objetos
+    # all() converte o tipo result.ScalarResult em uma lista
+    # o tipo ScalarResult é um iterável, quando consumimos uma vez, o elemento
+    # é excluído
+    stocks = database.session.execute(query).scalars().all()
     # dados da sessão do flask ficam disponíveis em templates
     # browsers diferentes tem sessões diferentes
-    return render_template('stocks/stocks.html')
+    return render_template('stocks/stocks.html', stocks=stocks)
 
 
 #                        permite lidar com diferentes métodos na mesma rota
@@ -55,10 +64,20 @@ def add_stock():
             # de usuários (como tokens gerados ao fazer o login)
             # armazenados em cookies criptograficamente assinados
             # não criptografados!
-            session['stock_symbol'] = stock_data.stock_symbol
-            session['number_of_shares'] = stock_data.number_of_shares
-            session['purchase_price'] = stock_data.purchase_price
+            # session['stock_symbol'] = stock_data.stock_symbol
+            # session['number_of_shares'] = stock_data.number_of_shares
+            # session['purchase_price'] = stock_data.purchase_price
             # adiciona flash messagem que será mostrada na próxima requisição
+
+
+            new_stock = Stock(
+                stock_data.stock_symbol,
+                stock_data.number_of_shares,
+                stock_data.purchase_price
+            )
+            database.session.add(new_stock)
+            database.session.commit()
+
             flash(f'Nova ação adicionada ({stock_data.stock_symbol})', 'success')
             current_app.logger.info(f"Added new stock ({request.form['stock_symbol']})!")
 

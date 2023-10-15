@@ -1,9 +1,35 @@
 from flask import Flask, flash, render_template
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import MetaData
 from logging.handlers import RotatingFileHandler
 import logging
 from flask.logging import default_handler
 from markupsafe import escape
 import os
+
+
+#######################
+#### Configuration ####
+#######################
+
+# Create a naming convention for the database tables
+convention = {
+    "ix": 'ix_%(column_0_label)s',
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+metadata = MetaData(naming_convention=convention)
+
+# cria instância da extensão no contexto global, mas ainda não foi adicionado na aplicação
+database = SQLAlchemy(metadata=metadata)
+
+
+########################
+### Helper Functions ###
+########################
+
 
 def create_app():
     # cria instância de uma app Flask, o nome da app equivale ao __name__
@@ -11,6 +37,7 @@ def create_app():
 
     config_type = os.getenv('CONFIG_TYPE', default='config.DevelopmentConfig')
     app.config.from_object(config_type)
+    initialize_extensions(app)
     register_blueprints(app)
     register_global_routes(app)
     register_error_pages(app)
@@ -26,6 +53,11 @@ def register_blueprints(app):
 
     app.register_blueprint(stocks_blueprint)
     app.register_blueprint(users_blueprint, url_prefix='/users')
+
+
+def initialize_extensions(app):
+    # faz o bind da extensão do sqlalchemy à aplicação
+    database.init_app(app)
 
 
 def configure_logging(app):
@@ -99,3 +131,5 @@ def register_error_pages(app):
     @app.errorhandler(405)
     def method_not_allowed(e):
         return render_template('405.html'), 405
+
+
