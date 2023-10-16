@@ -19,6 +19,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL',
                                          default=f"sqlite:///{os.path.join(BASEDIR, 'instance', 'app.db')}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False # emite sinais quando ocorrem modificações
+    WTF_CSRF_ENABLED = True # proteção contra CSRF do Flask-WTF
 
 
 class ProductionConfig(Config):
@@ -33,4 +34,5 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URI',
                                          default=f"sqlite:///{os.path.join(BASEDIR, 'instance', 'test.db')}")
-
+    # em ambiente de testes, o POST é feito diretamente, não atraves do form
+    WTF_CSRF_ENABLED = False 
