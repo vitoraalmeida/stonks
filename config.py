@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 
 # determina o caminho absoluto para o diretório que contém este arquivo
@@ -20,6 +21,7 @@ class Config(object):
                                          default=f"sqlite:///{os.path.join(BASEDIR, 'instance', 'app.db')}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False # emite sinais quando ocorrem modificações
     WTF_CSRF_ENABLED = True # proteção contra CSRF do Flask-WTF
+    REMEMBER_COOKIE_DURATION = timedelta(days=14)
 
 
 class ProductionConfig(Config):

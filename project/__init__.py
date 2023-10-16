@@ -1,4 +1,5 @@
 from flask import Flask, flash, render_template
+from flask_login import LoginManager
 from flask.logging import default_handler
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -14,7 +15,7 @@ import os
 #### Configuration ####
 #######################
 
-# Create a naming convention for the database tables
+# Cria convenção de nomes para tabelas do banco de dados
 convention = {
     "ix": 'ix_%(column_0_label)s',
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -28,6 +29,8 @@ metadata = MetaData(naming_convention=convention)
 database = SQLAlchemy(metadata=metadata)
 db_migration = Migrate()
 csrf_protection = CSRFProtect()
+login = LoginManager()
+login.login_view = "users.login"
 
 
 ########################
@@ -64,6 +67,18 @@ def initialize_extensions(app):
     database.init_app(app)
     db_migration.init_app(app, database)
     csrf_protection.init_app(app)
+    login.init_app(app)
+    # pagina padrão para a qual o usuário será redirecionado caso tente acessar 
+    # uma página que requer login, se não estiver logado
+    login.login_view = "users.login" 
+
+    from project.models import User
+
+    # função callback que flask-login usa para recarregar o usuário da sessão
+    @login.user_loader
+    def load_user(user_id): #user_id é uma string unicode
+        query = database.select(User).where(User.id == int(user_id))
+        return database.session.execute(query).scalar_one()
 
 
 def configure_logging(app):

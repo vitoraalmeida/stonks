@@ -51,3 +51,23 @@ def new_stock():
 def new_user():
     user = User('vitor@email.com', 'FlaskIsAwesome123')
     return user
+
+
+@pytest.fixture(scope='module')
+def register_default_user(test_client):
+    test_client.post('/users/register',
+                     data={'email': 'vitor@email.com',
+                           'password': 'FlaskIsAwesome123'},
+                     follow_redirects=True)
+    return
+
+
+@pytest.fixture(scope='module')
+def log_in_default_user(test_client, register_default_user):
+    test_client.post('/users/login',
+                     data={'email': 'vitor@email.com',
+                           'password': 'FlaskIsAwesome123'},
+                     follow_redirects=True)
+    yield
+
+    test_client.get('/users/logout', follow_redirects=True)
