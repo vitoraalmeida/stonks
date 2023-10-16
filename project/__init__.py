@@ -1,10 +1,11 @@
 from flask import Flask, flash, render_template
+from flask.logging import default_handler
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import MetaData
 from logging.handlers import RotatingFileHandler
 import logging
-from flask.logging import default_handler
 from markupsafe import escape
 import os
 
@@ -26,6 +27,7 @@ metadata = MetaData(naming_convention=convention)
 # cria instância da extensão no contexto global, mas ainda não foi adicionado na aplicação
 database = SQLAlchemy(metadata=metadata)
 db_migration = Migrate()
+csrf_protection = CSRFProtect()
 
 
 ########################
@@ -61,6 +63,7 @@ def initialize_extensions(app):
     # faz o bind da extensão à aplicação
     database.init_app(app)
     db_migration.init_app(app, database)
+    csfr_protection.init_app(app)
 
 
 def configure_logging(app):
