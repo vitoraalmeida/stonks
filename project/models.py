@@ -1,6 +1,7 @@
 from project import database
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import mapped_column
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Stock(database.Model):
@@ -34,3 +35,36 @@ class Stock(database.Model):
 
     def __repr__(self):
         return f'{self.stock_symbol} - {self.number_of_shares} ações compradas por R$ {self.purchase_price / 100}'
+
+
+class User(database.Model):
+    """
+    Classe que representa um usuário da aplicação
+
+    Os seguintes atributos de um usuário são armazenados na tabela:
+        * email
+        * hashed_password
+
+    Nunca armazene a senha em texto claro
+    """
+    __tablename__ = 'users'
+
+    id = mapped_column(Integer(), primary_key=True)
+    email = mapped_column(String(), unique=True)
+    password_hashed = mapped_column(String(128))
+
+    def __init__(self, email: str, password_plaintext: str):
+        self.email = email
+        self.password_hashed = self._generate_password_hash(password_plaintext)
+
+    def is_password_correct(self, password_plaintext: str):
+        return check_password_hash(self.password_hashed, password_plaintext)
+
+    # staticmethods indicam que o método não depende de alguma variável de instância
+    # métodos que começam com _ são convencionalmente privados
+    @staticmethod
+    def _generate_password_hash(password_plaintext):
+        return generate_password_hash(password_plaintext)
+
+    def __repr__(self):
+        return f'<User: {self.email}>'
