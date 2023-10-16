@@ -63,7 +63,7 @@ def initialize_extensions(app):
     # faz o bind da extensão à aplicação
     database.init_app(app)
     db_migration.init_app(app, database)
-    csfr_protection.init_app(app)
+    csrf_protection.init_app(app)
 
 
 def configure_logging(app):
