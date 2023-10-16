@@ -12,9 +12,8 @@ def test_client():
     # Define a configuração de teste para a aplicação
     # Assim, pacotes/módulos que se comportam de forma especifica em contextos
     # de testes podem identificar o contexto
-    #os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
+    os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
     flask_app = create_app()
-    flask_app.config.from_object('config.TestingConfig')
 
     testing_client = flask_app.test_client()
 
