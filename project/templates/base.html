@@ -15,14 +15,24 @@
 
   <body>
     <header class="site-header">
-      <nav class="nav">
-        <a class="nav-link logo" href="{{ url_for('index') }}">Stonks - Portifólio de investimentos</a>
-        <ul class="nav-list">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('stocks.list_stocks') }}">Lista de ações</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('stocks.add_stock') }}">Adicionar ação</a></li>
-        </ul>
-      </nav>
+        <nav class="nav">
+            <ul class="nav-list">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Flask Stock Portfolio App</a></li>
+            </ul>
+            <ul class="nav-list">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('stocks.list_stocks') }}">Listar ações</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('stocks.add_stock') }}">Adicionar ação</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('users.user_profile') }}">Meu perfil</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('users.logout') }}">Logout</a></li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('users.register') }}">Criar conta</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('users.login') }}">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </header>
+
 
     <div class="messages">
       <!-- flash messages - supported categories: success, info, error, message (default) -->

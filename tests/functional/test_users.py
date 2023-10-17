@@ -162,3 +162,103 @@ def test_invalid_logout_not_logged_in(test_client):
     assert b'Login' in response.data
     assert 'Por favor, faça o login para acessar essa página.' not in response.data.decode()
 
+
+def test_user_profile_not_logged_in(test_client):
+    """
+    DADA uma aplicação Flask configurada para testes com usuário logado
+    QUANDO a rota '/users/profile' for requisitada (GET) e o usuário não estiver logado
+    ENTÃO checa se o usuário é redirecionado para a pagina de login
+    """
+    response = test_client.get('/users/profile', follow_redirects=True)
+    assert response.status_code == 200
+    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    print(response.data.decode())
+    assert 'Perfil do Usuário' not in response.data.decode()
+    assert b'Email: vitor@email.com' not in response.data
+    assert 'Por favor, faça o login para acessar essa página.' not in response.data.decode()
+
+
+def test_user_profile_logged_in(test_client, log_in_default_user):
+    """
+    DADA uma aplicação Flask configurada para testes com usuário logado
+    QUANDO a rota '/users/profile' for requisitada (GET) 
+    ENTÃO checa se o perfil para o usuário logado é mostrado
+    """
+    response = test_client.get('/users/profile')
+    assert response.status_code == 200
+    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    assert 'Perfil do Usuário' in response.data.decode()
+    assert b'Email: vitor@email.com' in response.data
+
+
+def test_navigation_bar_logged_in(test_client, log_in_default_user):
+    """
+    DADA uma aplicação Flask configurada para testes com usuário logado
+    QUANDO a rota '/' é requisitada (GET)
+    ENTÃO checa se os links 'Listar ações', 'Adicionar ação', 'Meu perfil' e 'Logout' estão presentes
+    """
+    response = test_client.get('/')
+    assert response.status_code == 200
+    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    assert b'Bem vindo ao' in response.data
+    assert b'Stonks!' in response.data
+    assert 'Listar ações' in response.data.decode()
+    assert 'Adicionar ação' in response.data.decode()
+    assert b'Meu perfil' in response.data
+    assert b'Logout' in response.data
+    assert b'Criar conta' not in response.data
+    assert b'Login' not in response.data
+
+
+def test_navigation_bar_not_logged_in(test_client):
+    """
+    DADA uma aplicação Flask configurada para testes
+    QUANDO a rota '/' é requisitada (GET) e o usuário não está logado
+    ENTÃO checa se os links 'Criar conta' e 'Login' estão presentes
+    """
+    response = test_client.get('/')
+    assert response.status_code == 200
+    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    assert b'Bem vindo ao' in response.data
+    assert b'Stonks!' in response.data
+    assert b'Criar conta' in response.data
+    assert b'Login' in response.data
+    assert 'Listar ações' not in response.data.decode()
+    assert 'Adicionar ação' not in response.data.decode()
+    assert b'Meu perfil' not in response.data
+    assert b'Logout' not in response.data
+
+
+def test_login_with_next_valid_path(test_client, register_default_user):
+    """
+    DADA uma aplicação Flask configurada para testes
+    QUANDO a rota 'users/login?next=%2Fusers%2Fprofile' for requisitada (POST) com credenciais válidas
+    ENTÃO checa se o usuário é redirecionado para o perfil do usuário
+    """
+    response = test_client.post('users/login?next=%2Fusers%2Fprofile',
+                                data={'email': 'vitor@email.com',
+                                      'password': 'FlaskIsAwesome123'},
+                                follow_redirects=True)
+    print(response.data.decode())
+    assert response.status_code == 200
+    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    assert b'Meu perfil' in response.data
+    assert b'Bem vindo, vitor@email.com!' in response.data
+
+    test_client.get('/users/logout', follow_redirects=True)
+
+
+def test_login_with_next_invalid_path(test_client, register_default_user):
+    """
+    DADA uma aplicação Flask configurada para testes
+    QUANDO a rota 'users/login?next=http://www.badsite.com' for requisitada (POST) com credenciais válidas
+    ENTÃO checa se um erro 400 (Bad Request) e retornado
+    """
+    response = test_client.post('users/login?next=http://www.badsite.com',
+                                data={'email': 'vitor@email.com',
+                                      'password': 'FlaskIsAwesome123'},
+                                follow_redirects=True)
+    assert response.status_code == 400
+    assert b'Meu perfil' not in response.data
+    assert b'Bem vindo, vitor@email.com!' not in response.data
+

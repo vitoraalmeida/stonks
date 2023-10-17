@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block styling %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user_profile_style.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Perfil do Usuário</h1>
+
+<div class="card">
+  <div class="card-heading">
+    <h2>Conta</h2>
+  </div>
+  <div class="card-body">
+    <!-- current_user = proxy fornecido pelo Flask_Login -->
+    <p>Email: {{ current_user.email }}</p>
+  </div>
+</div>
+{% endblock %}
+

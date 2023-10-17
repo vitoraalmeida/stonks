@@ -62,12 +62,12 @@ def register_default_user(test_client):
     return
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def log_in_default_user(test_client, register_default_user):
     test_client.post('/users/login',
                      data={'email': 'vitor@email.com',
                            'password': 'FlaskIsAwesome123'},
                      follow_redirects=True)
     yield
-
     test_client.get('/users/logout', follow_redirects=True)
+

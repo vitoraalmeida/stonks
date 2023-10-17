@@ -5,6 +5,7 @@ from .forms import RegistrationForm, LoginForm
 from project.models import User
 from project import database
 from sqlalchemy.exc import IntegrityError
+from urllib.parse import urlparse
 
 @users_blueprint.errorhandler(403)
 def page_forbidden(e):
@@ -62,6 +63,18 @@ def login():
                 login_user(user, remember=form.remember_me.data)
                 flash(f'Bem vindo, {current_user.email}!')
                 current_app.logger.info(f'Logged in user: {current_user.email}')
+
+                if not request.args.get('next'):
+                    return redirect(url_for('users.user_profile'))
+
+                next_url = request.args.get('next')
+                current_app.logger.debug(f"{next_url}")
+                current_app.logger.debug(f"{urlparse(next_url)}")
+                if urlparse(next_url).scheme != '' or urlparse(next_url).netloc != '':
+                    current_app.logger.info(f'Invalid next path in login request: {next_url}')
+                    logout_user()
+                    return abort(400)
+                    current_app.logger.info(f'Redirecting after valid login to: {next_url}')
                 return redirect(url_for('index'))
 
         flash('ERRO! Credenciais inválidas.', 'error')
@@ -76,4 +89,10 @@ def logout():
     logout_user()
     flash('Até a próxima!')
     return redirect(url_for('index'))
+
+
+@users_blueprint.route('/profile')
+@login_required
+def user_profile():
+    return render_template('users/profile.html')
 
