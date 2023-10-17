@@ -5,40 +5,64 @@ from project.models import Stock, User
 from flask import current_app
 
 
-# scope='module' = a fixture será chamada uma vez por modulo de teste (arquivo)
-# caso seja scope='function' a fixture sera executada e finalizada a cada função
 @pytest.fixture(scope='module')
 def test_client():
-    # Define a configuração de teste para a aplicação
-    # Assim, pacotes/módulos que se comportam de forma especifica em contextos
-    # de testes podem identificar o contexto
     os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
     flask_app = create_app()
+    flask_app.extensions['mail'].suppress = True  # NEW!!
 
-    testing_client = flask_app.test_client()
+    # Create a test client using the Flask application configured for testing
+    with flask_app.test_client() as testing_client:
+        # Establish an application context before accessing the logger and database
+        with flask_app.app_context():
+            flask_app.logger.info('Creating database tables in test_client fixture...')
 
-    # normalmente o contexto é criado quando a aplicação está executando e 
-    # uma view function é chamada, mas não estamos chamando uma view functino
-    # então para podermos acessar o contexto, precisamos criar 
-    ctx = flask_app.app_context()
-    ctx.push()
+            # Create the database and the database table(s)
+            database.create_all()
 
-    # current_app é um proxy para o objeto global Application Context,
-    # que armazena dados da aplicação (configs etc)
-    current_app.logger.info('In the test_client() fixture...')
-    database.create_all()
+        yield testing_client  # this is where the testing happens!
 
-    # apos usar o contexto, removemos para limpeza da fixture
-    ctx.pop()
+        with flask_app.app_context():
+            database.drop_all()
 
-    # retorna o controle para a função que chamou a fixture, injetando os objetos
-    # que foram criados na fixture
-    yield testing_client
+# config do test client lidando manualmente com adição e remoção do contexto
 
-    # após o teste ser concluido, limpa o banco de testes
-    ctx = flask_app.app_context()
-    ctx.push()
-    database.drop_all()
+# scope='module' = a fixture será chamada uma vez por modulo de teste (arquivo)
+# caso seja scope='function' a fixture sera executada e finalizada a cada função
+#@pytest.fixture(scope='module')
+#def test_client():
+#    # Define a configuração de teste para a aplicação
+#    # Assim, pacotes/módulos que se comportam de forma especifica em contextos
+#    # de testes podem identificar o contexto
+#    os.environ['CONFIG_TYPE'] = 'config.TestingConfig'
+#    flask_app = create_app()
+#    # Não envia de fato os emails | ambiente de teste
+#    flask_app.extensions['mail'].suppress = True
+#
+#    testing_client = flask_app.test_client()
+#
+#    # normalmente o contexto é criado quando a aplicação está executando e 
+#    # uma view function é chamada, mas não estamos chamando uma view functino
+#    # então para podermos acessar o contexto, precisamos criar 
+#    ctx = flask_app.app_context()
+#    ctx.push()
+#
+#    # current_app é um proxy para o objeto global Application Context,
+#    # que armazena dados da aplicação (configs etc)
+#    current_app.logger.info('In the test_client() fixture...')
+#    database.create_all()
+#
+#    # apos usar o contexto, removemos para limpeza da fixture
+#    ctx.pop()
+#
+#    # retorna o controle para a função que chamou a fixture, injetando os objetos
+#    # que foram criados na fixture
+#    yield testing_client
+#
+#    # após o teste ser concluido, limpa o banco de testes
+#    ctx = flask_app.app_context()
+#    ctx.push()
+#    database.drop_all()
 
 
 @pytest.fixture(scope='module')

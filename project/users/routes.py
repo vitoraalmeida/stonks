@@ -1,10 +1,12 @@
 from . import users_blueprint
-from flask import render_template, flash, abort, request, current_app, redirect, url_for
+from flask import copy_current_request_context, render_template, flash, abort, request, current_app, redirect, url_for
 from flask_login import login_user, current_user, login_required, logout_user
+from flask_mail import Message
 from .forms import RegistrationForm, LoginForm
 from project.models import User
-from project import database
+from project import database, mail
 from sqlalchemy.exc import IntegrityError
+from threading import Thread
 from urllib.parse import urlparse
 
 @users_blueprint.errorhandler(403)
@@ -29,7 +31,23 @@ def register():
                 database.session.commit()
                 flash(f'Obrigado por se registrar, {new_user.email}!')
                 current_app.logger.info(f'Registered new user: {form.email.data}')
-                return redirect(url_for('stocks.list_stocks'))
+                
+                # configura o flask para fazer cópia do contexto para enviar 
+                # o email em outra thread. Só funciona em view functions
+                @copy_current_request_context
+                def send_email(message):
+                    with current_app.app_context():
+                        mail.send(message)
+
+                msg = Message(subject='Registro - Stonks - Portifólio de investimentos',
+                            body='Obrigado por se registrar no Stonks!',
+                            recipients=[form.email.data])
+
+                # cria a thread e inicia
+                email_thread = Thread(target=send_email, args=[msg])
+                email_thread.start()
+
+                return redirect(url_for('users.login'))
             # email já registrado (email unique)
             except IntegrityError:
                 database.session.rollback()

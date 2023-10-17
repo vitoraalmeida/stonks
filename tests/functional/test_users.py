@@ -1,3 +1,6 @@
+from project import mail
+
+
 def test_get_registration_page(test_client):
     """
     DADA uma aplicação Flask configurada para testes
@@ -16,15 +19,20 @@ def test_valid_registration(test_client):
     """
     DATA uma aplicação configurada para testes
     QUANDO a rota '/users/register' for requisitada (POST)
-    ENTÃO checa se a resposta é válida e o usuário foi registrado
+    ENTÃO checa se a resposta é válida, o usuário foi registrado e se um email foi enfileirado para ser enviado
     """
-    response = test_client.post('/users/register',
-                                data={'email': 'vitor@email.com',
-                                      'password': 'FlaskIsAwesome123'},
-                                follow_redirects=True)
-    assert response.status_code == 200
-    assert b'Obrigado por se registrar, vitor@email.com!' in response.data
-    assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+    with mail.record_messages() as outbox:
+        response = test_client.post('/users/register',
+                                    data={'email': 'vitor@email.com',
+                                          'password': 'FlaskIsAwesome123'},
+                                    follow_redirects=True)
+        assert response.status_code == 200
+        assert b'Obrigado por se registrar, vitor@email.com!' in response.data
+        assert 'Stonks - Portifólio de investimentos' in response.data.decode()
+        assert len(outbox) == 1
+        assert outbox[0].subject == 'Registro - Stonks - Portifólio de investimentos'
+        assert outbox[0].sender == 'almeidavitor.dev@gmail.com'
+        assert outbox[0].recipients[0] == 'vitor@email.com'
 
 
 def test_invalid_registration(test_client):

@@ -138,6 +138,20 @@ Flask = ">=1.0.4"
 Werkzeug = ">=1.0.1"
 
 [[package]]
+name = "flask-mail"
+version = "0.9.1"
+description = "Flask extension for sending email"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Flask-Mail-0.9.1.tar.gz", hash = "sha256:22e5eb9a940bf407bcf30410ecc3708f3c56cc44b29c34e1726fe85006935f41"},
+]
+
+[package.dependencies]
+blinker = "*"
+Flask = "*"
+
+[[package]]
 name = "flask-migrate"
 version = "4.0.5"
 description = "SQLAlchemy database migrations for Flask applications using Alembic."
@@ -717,4 +731,4 @@ email = ["email-validator"]
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.*"
-content-hash = "0a8c24e097e1ab555f80f1c43578815b8bc4d6103f8b0dec338c994aa8b355bf"
+content-hash = "f97f854fda8da78fb9f8e61c1a53f2c1ea9d2ab5d5b02c0c8fa797bc181385f5"

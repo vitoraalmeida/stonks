@@ -1,6 +1,7 @@
 from flask import Flask, flash, render_template
 from flask_login import LoginManager
 from flask.logging import default_handler
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -31,6 +32,7 @@ db_migration = Migrate()
 csrf_protection = CSRFProtect()
 login = LoginManager()
 login.login_view = "users.login"
+mail = Mail()
 
 
 ########################
@@ -71,6 +73,7 @@ def initialize_extensions(app):
     # pagina padrão para a qual o usuário será redirecionado caso tente acessar 
     # uma página que requer login, se não estiver logado
     login.login_view = "users.login" 
+    mail.init_app(app)
 
     from project.models import User
 
@@ -79,6 +82,7 @@ def initialize_extensions(app):
     def load_user(user_id): #user_id é uma string unicode
         query = database.select(User).where(User.id == int(user_id))
         return database.session.execute(query).scalar_one()
+
 
 
 def configure_logging(app):
