@@ -1,4 +1,7 @@
-from project import mail
+from project import mail, database
+from project.models import User
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 
 def test_get_registration_page(test_client):
@@ -30,9 +33,10 @@ def test_valid_registration(test_client):
         assert b'Obrigado por se registrar, vitor@email.com!' in response.data
         assert 'Stonks - Portifólio de investimentos' in response.data.decode()
         assert len(outbox) == 1
-        assert outbox[0].subject == 'Registro - Stonks - Portifólio de investimentos'
+        assert outbox[0].subject == 'Stonks - Confirme seu endereço de email'
         assert outbox[0].sender == 'almeidavitor.dev@gmail.com'
         assert outbox[0].recipients[0] == 'vitor@email.com'
+        assert 'http://localhost/users/confirm/' in outbox[0].html
 
 
 def test_invalid_registration(test_client):
@@ -70,6 +74,54 @@ def test_duplicate_registration(test_client):
     assert b'Obrigado por se registrar, vitor3@email.com!' not in response.data
     assert 'Stonks - Portifólio de investimentos' in response.data.decode()
     assert 'ERRO: dados inválidos foram usados para registro.' in response.data.decode()
+
+
+def test_confirm_email_valid(test_client):
+    """
+    DADA uma aplicação flask configurada para testes
+    QUANDO a rota '/users/confirm/<token>' for requisitada (GET) com dados válidos
+    ENTÃO checa se o email do usuário está marcado como confirmado
+    """
+    # Cria o token unico para confirmar o endereço de email 
+    confirm_serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    token = confirm_serializer.dumps('vitor@email.com', salt='email-confirmation-salt')
+
+    response = test_client.get('/users/confirm/'+token, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Obrigado por confirmar seu email' in response.data
+    query = database.select(User).where(User.email == 'vitor@email.com')
+    user = database.session.execute(query).scalar_one()
+ 
+
+def test_confirm_email_already_confirmed(test_client):
+    """
+    DADA uma aplicação flask configurada para testes
+    QUANDO a rota '/users/confirm/<token>' for requisitada (GET) com dados válidos, mas o email já foi confirmado
+    ENTÃO checa se o email do usuário está marcado como confirmado
+    """
+    # Create the unique token for confirming a user's email address
+    confirm_serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    token = confirm_serializer.dumps('vitor@email.com', salt='email-confirmation-salt')
+
+    test_client.get('/users/confirm/'+token, follow_redirects=True)
+
+    response = test_client.get('/users/confirm/'+token, follow_redirects=True)
+    assert response.status_code == 200
+    assert 'A conta já foi verificada' in response.data.decode()
+    query = database.select(User).where(User.email == 'vitor@email.com')
+    user = database.session.execute(query).scalar_one()
+    assert user.email_confirmed
+
+
+def test_confirm_email_invalid(test_client):
+    """
+    DATA uma aplicação flask configurada para testes
+    QUANDO a rota '/users/confirm/<token>' for requisitada (GET) com dados inválidos
+    ENTÃO checa se o link não foi aceito
+    """
+    response = test_client.get('/users/confirm/bad_confirmation_link', follow_redirects=True)
+    assert response.status_code == 200
+    assert 'O link de confirmação expirou ou é inválido.' in response.data.decode()
 
 
 def test_get_login_page(test_client):

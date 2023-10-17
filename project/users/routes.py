@@ -1,7 +1,10 @@
 from . import users_blueprint
+from datetime import datetime
 from flask import copy_current_request_context, render_template, flash, abort, request, current_app, redirect, url_for
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer
+from itsdangerous.exc import BadSignature
 from .forms import RegistrationForm, LoginForm
 from project.models import User
 from project import database, mail
@@ -29,7 +32,7 @@ def register():
                 new_user = User(form.email.data, form.password.data)
                 database.session.add(new_user)
                 database.session.commit()
-                flash(f'Obrigado por se registrar, {new_user.email}!')
+                flash(f'Obrigado por se registrar, {new_user.email}! Por favor, cheque seu email para confirmar o endereço de email.', 'success')
                 current_app.logger.info(f'Registered new user: {form.email.data}')
                 
                 # configura o flask para fazer cópia do contexto para enviar 
@@ -39,10 +42,7 @@ def register():
                     with current_app.app_context():
                         mail.send(message)
 
-                msg = Message(subject='Registro - Stonks - Portifólio de investimentos',
-                            body='Obrigado por se registrar no Stonks!',
-                            recipients=[form.email.data])
-
+                msg = generate_confirmation_email(form.email.data)
                 # cria a thread e inicia
                 email_thread = Thread(target=send_email, args=[msg])
                 email_thread.start()
@@ -113,4 +113,42 @@ def logout():
 @login_required
 def user_profile():
     return render_template('users/profile.html')
+
+
+@users_blueprint.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        confirm_serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        email = confirm_serializer.loads(token, salt='email-confirmation-salt', max_age=3600)
+    except BadSignature:
+        flash('O link de confirmação expirou ou é inválido.', 'error')
+        current_app.logger.info(f'Invalid or expired confirmation link received from IP address: {request.remote_addr}')
+        return redirect(url_for('users.login'))
+
+    query = database.select(User).where(User.email == email)
+    user = database.session.execute(query).scalar_one()
+
+    if user.email_confirmed:
+        flash('A conta já foi verificada. Faça o login', 'info')
+        current_app.logger.info(f'Confirmation link received for a confirmed user: {user.email}')
+    else:
+        user.email_confirmed = True
+        user.email_confirmed_on = datetime.now()
+        database.session.add(user)
+        database.session.commit()
+        flash('Obrigado por confirmar seu email!', 'success')
+        current_app.logger.info(f'Email address confirmed for: {user.email}')
+
+    return redirect(url_for('index'))
+
+
+def generate_confirmation_email(user_email):
+    confirm_serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+    confirm_url = url_for('users.confirm_email',
+                          token=confirm_serializer.dumps(user_email, salt='email-confirmation-salt'),
+                          _external=True) # gera url absoluta
+    return Message(subject='Stonks - Confirme seu endereço de email',
+                   html=render_template('users/email_confirmation.html', confirm_url=confirm_url),
+                   recipients=[user_email])
 
